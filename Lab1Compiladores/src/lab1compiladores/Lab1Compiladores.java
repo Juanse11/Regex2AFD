@@ -20,7 +20,7 @@ public class Lab1Compiladores {
         // TODO code application logic here
         Scanner sc = new Scanner(System.in);
         System.out.println("Ingrese la expresión regular: ");
-        String regex = sc.nextLine()+"&#";
+        String regex = sc.nextLine()+".#";
         SyntaxTree st = new SyntaxTree();
         Node root = st.constructTree(regex);
         SyntaxTree.printBinaryTree(root, 0);

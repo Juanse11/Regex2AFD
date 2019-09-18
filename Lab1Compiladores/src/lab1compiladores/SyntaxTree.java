@@ -21,16 +21,6 @@ public class SyntaxTree {
     private ArrayList<Character> operators = new ArrayList<>();
     private ArrayList<Character> symbols = new ArrayList<>();
 
-    public Node generateTree(String regex) {
-        char[] regexCharArray = regex.toCharArray();
-        for (Character c : regexCharArray) {
-            if (!operators.contains(c)) {
-
-            }
-        }
-
-        return null;
-    }
 
     public Node constructTree(String regex) {
         char[] regexCharArr = regex.toCharArray();
@@ -114,10 +104,10 @@ public class SyntaxTree {
         if (second == '*') {
             return true;
         }
-        if (first == '&') {
+        if (first == '.') {
             return false;
         }
-        if (second == '&') {
+        if (second == '.') {
             return true;
         }
         if (first == '|') {
@@ -127,7 +117,7 @@ public class SyntaxTree {
     }
 
     private void getOperators() {
-        Character[] ops = {'*', '|', '+', '?', '&'};
+        Character[] ops = {'*', '|', '+', '?', '.'};
         operators.addAll(Arrays.asList(ops));
     }
 
