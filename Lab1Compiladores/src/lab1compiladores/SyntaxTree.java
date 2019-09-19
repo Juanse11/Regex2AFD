@@ -53,7 +53,35 @@ public class SyntaxTree {
         Node tree = operandStack.pop();
         return tree;
     }
-
+    
+    public void traverseTree (Node node){
+        if (node == null) {
+            return;
+        }
+        traverseTree(node.getLeftNode());
+        traverseTree(node.getRightNode());
+        if (node.getLeftNode() == null && node.getRightNode() == null) {
+            node.setIsNullable(true);
+            node.addToFirstPos(node);
+            node.addToFollowPos(node);
+        }else{
+            switch (node.getSymbol()) {
+            case "|":
+                ArrayList<Node> currentFirstPos = node.getLeftNode().getFirstPos().removeAll(node.getRightNode().getFirstPos());
+                break;
+            case "*":
+                
+                break;
+            case "+":
+                
+                break;
+            default:
+                throw new AssertionError();
+        }
+        }
+    }
+    
+    
     public static void printBinaryTree(Node root, int level) {
         if (root == null) {
             return;
@@ -79,7 +107,7 @@ public class SyntaxTree {
     private void mergeNodes(String symbol) {
         Node root = new Node(symbol, 0);
         Node node2 = operandStack.pop();
-        if (!symbol.equals("*")) {
+        if (!symbol.equals("*") && !symbol.equals("+")) {
             Node node1 = operandStack.pop();
             root.setLeftNode(node1);
             root.setRightNode(node2);
@@ -132,5 +160,7 @@ public class SyntaxTree {
     private boolean isOperator(char c) {
         return operators.contains(c);
     }
+    
+    
 
 }
