@@ -21,7 +21,6 @@ public class SyntaxTree {
     private ArrayList<Character> operators = new ArrayList<>();
     private ArrayList<Character> symbols = new ArrayList<>();
 
-
     public Node constructTree(String regex) {
         char[] regexCharArr = regex.toCharArray();
         getOperators();
@@ -37,7 +36,8 @@ public class SyntaxTree {
                 }
                 operatorStack.pop();
             } else if (!isOperator(c)) {
-                Node t = new Node(Character.toString(c), id++);
+                id = id+1;
+                Node t = new Node(Character.toString(c), id);
                 operandStack.push(t);
             } else if (isOperator(c)) {
                 while (!operatorStack.isEmpty() && checkPriority(c, operatorStack.get(operatorStack.size() - 1))) {
@@ -53,36 +53,76 @@ public class SyntaxTree {
         Node tree = operandStack.pop();
         return tree;
     }
-    
-    public void traverseTree (Node node){
+
+    public  void traverseTree(Node node) {
         if (node == null) {
             return;
+        } else {
+            traverseTree(node.getLeftNode());
+            traverseTree(node.getRightNode());
+            if (node.getLeftNode() == null && node.getRightNode() == null) {
+                node.setIsNullable(false);
+                ArrayList<Node> currentFirstPos = new ArrayList<Node>();
+                currentFirstPos.add(node);
+                node.addToFirstPos(currentFirstPos);
+                ArrayList<Node> currentLastPos = new ArrayList<Node>();
+                currentLastPos.add(node);
+                node.addToLastPos(currentLastPos);
+            } else {
+                Node leftChildNode = node.getLeftNode();
+                Node rightChildNode = node.getRightNode();
+                ArrayList<Node> currentFirstPos = new ArrayList();
+                ArrayList<Node> currentLastPos = new ArrayList();
+                switch (node.getSymbol()) {
+
+                    case "|":
+                        node.setIsNullable(leftChildNode.isNullable() || rightChildNode.isNullable());
+                        currentFirstPos = mergeArrayWithoutDuplicates(leftChildNode.getFirstPos(), rightChildNode.getFirstPos());
+                        node.addToFirstPos(currentFirstPos);
+                        currentLastPos = mergeArrayWithoutDuplicates(leftChildNode.getLastPos(), rightChildNode.getLastPos());
+                        node.addToLastPos(currentLastPos);
+                        break;
+                    case ".":
+                        node.setIsNullable(leftChildNode.isNullable() && rightChildNode.isNullable());
+
+                        if (leftChildNode.isNullable()) {
+                            currentFirstPos = mergeArrayWithoutDuplicates(leftChildNode.getFirstPos(), rightChildNode.getFirstPos());
+                            node.addToFirstPos(currentFirstPos);
+                        } else {
+                            node.addToFirstPos(leftChildNode.getFirstPos());
+                        }
+                        if (rightChildNode.isNullable()) {
+                            currentLastPos = mergeArrayWithoutDuplicates(leftChildNode.getLastPos(), rightChildNode.getLastPos());
+                            node.addToLastPos(currentLastPos);
+                        } else {
+                            node.addToLastPos(rightChildNode.getLastPos());
+                        }
+                        break;
+                    case "+":
+
+                        break;
+                    case "*":
+                        node.setIsNullable(true);
+                        node.addToFirstPos(leftChildNode.getFirstPos());
+                        node.addToLastPos(leftChildNode.getLastPos());
+                        break;
+                }
+            }
         }
-        traverseTree(node.getLeftNode());
-        traverseTree(node.getRightNode());
-        if (node.getLeftNode() == null && node.getRightNode() == null) {
-            node.setIsNullable(true);
-            node.addToFirstPos(node);
-            node.addToFollowPos(node);
-        }else{
-            switch (node.getSymbol()) {
-            case "|":
-                ArrayList<Node> currentFirstPos = node.getLeftNode().getFirstPos().removeAll(node.getRightNode().getFirstPos());
-                break;
-            case "*":
-                
-                break;
-            case "+":
-                
-                break;
-            default:
-                throw new AssertionError();
-        }
-        }
+
     }
-    
-    
-    public static void printBinaryTree(Node root, int level) {
+
+    private ArrayList<Node> mergeArrayWithoutDuplicates(ArrayList<Node> arr1, ArrayList<Node> arr2) {
+        ArrayList<Node> arr3 = arr1;
+        for (Node n : arr2) {
+            if (!arr3.contains(n)) {
+                arr3.add(n);
+            }
+        }
+        return arr3;
+    }
+
+    public void printBinaryTree(Node root, int level) {
         if (root == null) {
             return;
         }
@@ -113,14 +153,13 @@ public class SyntaxTree {
             root.setRightNode(node2);
             node1.setParentNode(root);
             node2.setParentNode(root);
-        }else{
+        } else {
             root.setLeftNode(node2);
             root.setRightNode(null);
             node2.setParentNode(root);
         }
         operandStack.push(root);
     }
-
 
     private boolean checkPriority(char first, Character second) {
         if (first == second) {
@@ -160,7 +199,5 @@ public class SyntaxTree {
     private boolean isOperator(char c) {
         return operators.contains(c);
     }
-    
-    
 
 }

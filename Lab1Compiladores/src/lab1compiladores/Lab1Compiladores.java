@@ -23,7 +23,15 @@ public class Lab1Compiladores {
         String regex = sc.nextLine()+".#";
         SyntaxTree st = new SyntaxTree();
         Node root = st.constructTree(regex);
-        SyntaxTree.printBinaryTree(root, 0);
+        st.printBinaryTree(root, 0);
+        st.traverseTree(root);
+        for (Node n: root.getFirstPos()) {
+            System.out.println(n.getNodeID());
+        }
+        for (Node n: root.getLastPos()) {
+            System.out.println(n.getNodeID());
+        }
+        
     }
     
 }

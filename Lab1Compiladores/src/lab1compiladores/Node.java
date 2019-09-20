@@ -68,7 +68,7 @@ public class Node {
         return symbol;
     }
 
-    public boolean isIsNullable() {
+    public boolean isNullable() {
         return isNullable;
     }
 
@@ -103,14 +103,14 @@ public class Node {
     public void setSymbol(String symbol) {
         this.symbol = symbol;
     }
-    public void addToFirstPos(Node node){
-        this.firstPos.add(node);
+    public void addToFirstPos(ArrayList<Node> node){
+        this.firstPos.addAll(node);
     }
-    public void addToLastPos(Node node){
-        this.lastPos.add(node);
+    public void addToLastPos(ArrayList<Node> node){
+        this.lastPos.addAll(node);
     }
-    public void addToFollowPos(Node node){
-        this.followPos.add(node);
+    public void addToFollowPos(ArrayList<Node> node){
+        this.followPos.addAll(node);
     }
     
     
