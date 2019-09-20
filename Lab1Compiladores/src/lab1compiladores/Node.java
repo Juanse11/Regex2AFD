@@ -16,6 +16,24 @@ public class Node {
     private Node rightNode;
     private Node leftNode;
     private int nodeID;
+    private int x;
+    private int y;
+
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
     private String symbol;
     private boolean isNullable;
     private ArrayList<Node> firstPos;

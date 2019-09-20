@@ -111,6 +111,10 @@ public class SyntaxTree {
         }
 
     }
+    
+    private void setFirstPos(){
+        
+    }
 
     private ArrayList<Node> mergeArrayWithoutDuplicates(ArrayList<Node> arr1, ArrayList<Node> arr2) {
         ArrayList<Node> arr3 = arr1;
