@@ -10,7 +10,10 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -23,51 +26,9 @@ public class GUI extends javax.swing.JFrame {
      */
     public GUI() {
         initComponents();
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Ingrese la expresión regular: ");
-        String regex = sc.nextLine() + ".#";
-        SyntaxTree st = new SyntaxTree();
-        Node root = st.constructTree(regex);
-        st.printBinaryTree(root, 0);
-        st.traverseTree(root);
         setLocationRelativeTo(null);
         setResizable(false);
         setBackground(Color.WHITE);
-        MyCanvas c = new MyCanvas() {
-            public void paint(Graphics g) {
-                // set color to red 
-                paintTree(g, root, 0, treePanel.getWidth() / 2 - 15, 0);
-
-            }
-
-            private void paintTree(Graphics g, Node root, int level, int x, int y) {
-                if (root == null) {
-                    return;
-                }
-                paintTree(g, root.getLeftNode(), level + 1, x - 40, y + 40);
-                paintTree(g, root.getRightNode(), level + 1, x + 40, y + 40);
-
-                g.setColor(Color.black);
-                g.drawOval(x, y, 30, 30);
-                g.drawString(root.getSymbol(), x + 15, y + 15);
-                Font font = new Font("Helvetica", Font.BOLD, 8);
-                g.setFont(font);
-                g.drawString("{1,2,3}", x - 35, y + 15);
-                g.drawString("{1,2,3}", x + 35, y + 15);
-                root.setX(x);
-                root.setY(y);
-                if (root.getLeftNode() != null) {
-                    if (root.getRightNode() != null) {
-                        g.drawLine(x + 15, y + 15, root.getLeftNode().getX() + 15, root.getLeftNode().getY() + 15);
-                        g.drawLine(x + 15, y + 15, root.getRightNode().getX() + 15, root.getRightNode().getY() + 15);
-                    } else {
-                        g.drawLine(x + 15, y + 15, root.getLeftNode().getX() + 15, root.getLeftNode().getY() + 15);
-                    }
-                }
-
-            }
-        };
-        treePanel.add(c);
 
     }
 
@@ -80,6 +41,87 @@ public class GUI extends javax.swing.JFrame {
 
     }
 
+    private void drawTree(Node root) {
+
+        MyCanvas c = new MyCanvas() {
+            public void paint(Graphics g) {
+                // set color to red 
+                paintTree(g, root, 0, treePanel.getWidth() / 2 + 30, 0);
+
+            }
+
+            private void paintTree(Graphics g, Node root, int level, int x, int y) {
+                if (root == null) {
+                    return;
+                }
+                paintTree(g, root.getLeftNode(), level + 1, x - 40, y + 40);
+                paintTree(g, root.getRightNode(), level + 1, x + 40, y + 40);
+
+                g.setColor(Color.black);
+                if (root.getSymbol().equals(".")) {
+                    g.fillOval(x + 13, y + 10, 6, 6);
+                } else {
+                    Font f = new Font("Helvetica", Font.BOLD, 12);
+                    g.setFont(f);
+                    g.drawString(root.getSymbol(), x + 15, y + 15);
+                }
+
+                g.drawString(nodeSymbolsToArray(root.getFirstPos()).toString(), x - 20, y + 15);
+                g.drawString(nodeSymbolsToArray(root.getLastPos()).toString(), x + 20, y + 15);
+                root.setX(x);
+                root.setY(y);
+                if (root.getLeftNode() != null) {
+                    if (root.getRightNode() != null) {
+                        g.drawLine(x + 15, y + 15, root.getLeftNode().getX() + 15, root.getLeftNode().getY() + 15);
+                        g.drawLine(x + 15, y + 15, root.getRightNode().getX() + 15, root.getRightNode().getY() + 15);
+                    } else {
+                        g.drawLine(x + 15, y + 15, root.getLeftNode().getX() + 15, root.getLeftNode().getY() + 15);
+                    }
+                }
+            }
+
+            private ArrayList nodeSymbolsToArray(ArrayList<Node> nodes) {
+                ArrayList list = new ArrayList();
+                for (Node n : nodes) {
+                    list.add(n.getNodeID());
+                }
+                return list;
+            }
+        };
+        treePanel.add(c);
+    }
+
+    private void generateTree(String regex) {
+        SyntaxTree st = new SyntaxTree();
+        Node root = st.constructTree(regex);
+        st.traverseTree(root);
+        drawTree(root);
+        fillIndexTable(st.getLeafNodes());
+    }
+
+    private void fillIndexTable(ArrayList<Node> leafNodes) {
+        DefaultTableModel dtm = new DefaultTableModel(0, 0);
+        String header[] = new String[]{"Index", "SigPos", "PrimPos", "UltPos"};
+        dtm.setColumnIdentifiers(header);
+        indexTable.setModel(dtm);
+
+        for (Node n : leafNodes) {
+            String followPos = nodeSymbolsToArray(n.getFollowPos()).toString();
+            String firstPos = nodeSymbolsToArray(n.getFirstPos()).toString();
+            String lastPos = nodeSymbolsToArray(n.getLastPos()).toString();
+
+            dtm.addRow(new Object[]{n.getNodeID(), followPos, firstPos, lastPos});
+        }
+    }
+
+    private ArrayList nodeSymbolsToArray(ArrayList<Node> nodes) {
+        ArrayList list = new ArrayList();
+        for (Node n : nodes) {
+            list.add(n.getNodeID());
+        }
+        return list;
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -90,16 +132,16 @@ public class GUI extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        followPosTable = new javax.swing.JTable();
+        indexTable = new javax.swing.JTable();
         treePanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        regexTextField = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new java.awt.Dimension(700, 600));
 
-        followPosTable.setModel(new javax.swing.table.DefaultTableModel(
+        indexTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -110,7 +152,7 @@ public class GUI extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane1.setViewportView(followPosTable);
+        jScrollPane1.setViewportView(indexTable);
 
         javax.swing.GroupLayout treePanelLayout = new javax.swing.GroupLayout(treePanel);
         treePanel.setLayout(treePanelLayout);
@@ -126,6 +168,11 @@ public class GUI extends javax.swing.JFrame {
         jLabel1.setText("Expresión Regular");
 
         jButton1.setText("Generar");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -138,7 +185,7 @@ public class GUI extends javax.swing.JFrame {
                         .addContainerGap()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(regexTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -152,7 +199,7 @@ public class GUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(regexTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton1))
                 .addGap(32, 32, 32)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -161,6 +208,12 @@ public class GUI extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        String regex = regexTextField.getText();
+        generateTree(regex);
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -198,11 +251,11 @@ public class GUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTable followPosTable;
+    private javax.swing.JTable indexTable;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField regexTextField;
     private javax.swing.JPanel treePanel;
     // End of variables declaration//GEN-END:variables
 }

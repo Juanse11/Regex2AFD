@@ -14,12 +14,14 @@ import java.util.*;
  */
 public class SyntaxTree {
 
-    public SyntaxTree() {
-    }
     Stack<Node> operandStack = new Stack();
     Stack<Character> operatorStack = new Stack();
     private ArrayList<Character> operators = new ArrayList<>();
     private ArrayList<Character> symbols = new ArrayList<>();
+    private ArrayList<Node> leafNodes = new ArrayList<>();
+
+    public SyntaxTree() {
+    }
 
     public Node constructTree(String regex) {
         char[] regexCharArr = regex.toCharArray();
@@ -36,9 +38,10 @@ public class SyntaxTree {
                 }
                 operatorStack.pop();
             } else if (!isOperator(c)) {
-                id = id+1;
-                Node t = new Node(Character.toString(c), id);
-                operandStack.push(t);
+                id = id + 1;
+                Node n = new Node(Character.toString(c), id);
+                leafNodes.add(n);
+                operandStack.push(n);
             } else if (isOperator(c)) {
                 while (!operatorStack.isEmpty() && checkPriority(c, operatorStack.get(operatorStack.size() - 1))) {
                     performOperation();
@@ -50,11 +53,11 @@ public class SyntaxTree {
         while (!operatorStack.isEmpty()) {
             performOperation();
         }
-        Node tree = operandStack.pop();
-        return tree;
+
+        return operandStack.pop();
     }
 
-    public  void traverseTree(Node node) {
+    public void traverseTree(Node node) {
         if (node == null) {
             return;
         } else {
@@ -97,6 +100,10 @@ public class SyntaxTree {
                         } else {
                             node.addToLastPos(rightChildNode.getLastPos());
                         }
+
+                        for (Node n : leftChildNode.getLastPos()) {
+                            n.setFollowPos(mergeArrayWithoutDuplicates(n.getFollowPos(), rightChildNode.getFirstPos()));
+                        }
                         break;
                     case "+":
 
@@ -105,41 +112,29 @@ public class SyntaxTree {
                         node.setIsNullable(true);
                         node.addToFirstPos(leftChildNode.getFirstPos());
                         node.addToLastPos(leftChildNode.getLastPos());
+
+                        for (Node n : node.getLastPos()) {
+                            n.setFollowPos(mergeArrayWithoutDuplicates(n.getFollowPos(), node.getFirstPos()));
+                        }
                         break;
                 }
             }
         }
 
     }
-    
-    private void setFirstPos(){
-        
+
+    private void setFirstPos() {
+
     }
 
     private ArrayList<Node> mergeArrayWithoutDuplicates(ArrayList<Node> arr1, ArrayList<Node> arr2) {
-        ArrayList<Node> arr3 = arr1;
+        ArrayList<Node> arr3 = (ArrayList<Node>) arr1.clone();
         for (Node n : arr2) {
             if (!arr3.contains(n)) {
                 arr3.add(n);
             }
         }
         return arr3;
-    }
-
-    public void printBinaryTree(Node root, int level) {
-        if (root == null) {
-            return;
-        }
-        printBinaryTree(root.getRightNode(), level + 1);
-        if (level != 0) {
-            for (int i = 0; i < level - 1; i++) {
-                System.out.print("|\t");
-            }
-            System.out.println("|-------" + root.getSymbol());
-        } else {
-            System.out.println(root.getSymbol());
-        }
-        printBinaryTree(root.getLeftNode(), level + 1);
     }
 
     private void performOperation() {
@@ -151,7 +146,7 @@ public class SyntaxTree {
     private void mergeNodes(String symbol) {
         Node root = new Node(symbol, 0);
         Node node2 = operandStack.pop();
-        if (!symbol.equals("*") && !symbol.equals("+")) {
+        if (!symbol.equals("*") && !symbol.equals("+") && !symbol.equals("?")) {
             Node node1 = operandStack.pop();
             root.setLeftNode(node1);
             root.setRightNode(node2);
@@ -166,29 +161,18 @@ public class SyntaxTree {
     }
 
     private boolean checkPriority(char first, Character second) {
-        if (first == second) {
+        Character[] ops = {'(', ')', '*', '+', '.', '?', '|'};
+        ArrayList<Character> opsList = new ArrayList();
+        opsList.addAll(Arrays.asList(ops));
+        if (opsList.indexOf(first) >= opsList.indexOf(second) && !second.equals('(')) {
             return true;
-        }
-        if (first == '*') {
+        } else {
             return false;
         }
-        if (second == '*') {
-            return true;
-        }
-        if (first == '.') {
-            return false;
-        }
-        if (second == '.') {
-            return true;
-        }
-        if (first == '|') {
-            return false;
-        }
-        return true;
     }
 
     private void getOperators() {
-        Character[] ops = {'*', '|', '+', '?', '.'};
+        Character[] ops = {'*', '+', '.', '?', '|'};
         operators.addAll(Arrays.asList(ops));
     }
 
@@ -198,6 +182,10 @@ public class SyntaxTree {
                 symbols.add(c);
             }
         }
+    }
+
+    public ArrayList<Node> getLeafNodes() {
+        return this.leafNodes;
     }
 
     private boolean isOperator(char c) {

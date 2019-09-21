@@ -12,12 +12,18 @@ import java.util.ArrayList;
  * @author Visitante
  */
 public class Node {
+
     private Node parentNode;
     private Node rightNode;
     private Node leftNode;
     private int nodeID;
     private int x;
     private int y;
+    private String symbol;
+    private boolean isNullable;
+    private ArrayList<Node> firstPos;
+    private ArrayList<Node> lastPos;
+    private ArrayList<Node> followPos;
 
     public int getX() {
         return x;
@@ -34,14 +40,7 @@ public class Node {
     public void setY(int y) {
         this.y = y;
     }
-    private String symbol;
-    private boolean isNullable;
-    private ArrayList<Node> firstPos;
-    private ArrayList<Node> lastPos;
-    private ArrayList<Node> followPos;
-    
-    
-    
+
     public Node(String symbol, int nodeID) {
         this.nodeID = nodeID;
         this.symbol = symbol;
@@ -121,15 +120,14 @@ public class Node {
     public void setSymbol(String symbol) {
         this.symbol = symbol;
     }
-    public void addToFirstPos(ArrayList<Node> node){
+
+    public void addToFirstPos(ArrayList<Node> node) {
         this.firstPos.addAll(node);
     }
-    public void addToLastPos(ArrayList<Node> node){
+
+    public void addToLastPos(ArrayList<Node> node) {
         this.lastPos.addAll(node);
     }
-    public void addToFollowPos(ArrayList<Node> node){
-        this.followPos.addAll(node);
-    }
-    
-    
+
+
 }
