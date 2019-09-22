@@ -53,7 +53,9 @@ public class SyntaxTree {
         while (!operatorStack.isEmpty()) {
             performOperation();
         }
-
+        operandStack.push(new Node(Character.toString('#'), id + 1));
+        operatorStack.push('.');
+        performOperation();
         return operandStack.pop();
     }
 
@@ -106,7 +108,13 @@ public class SyntaxTree {
                         }
                         break;
                     case "+":
+                        node.setIsNullable(false);
+                        node.addToFirstPos(leftChildNode.getFirstPos());
+                        node.addToLastPos(leftChildNode.getLastPos());
 
+                        for (Node n : node.getLastPos()) {
+                            n.setFollowPos(mergeArrayWithoutDuplicates(n.getFollowPos(), node.getFirstPos()));
+                        }
                         break;
                     case "*":
                         node.setIsNullable(true);
@@ -120,10 +128,6 @@ public class SyntaxTree {
                 }
             }
         }
-
-    }
-
-    private void setFirstPos() {
 
     }
 
@@ -164,11 +168,7 @@ public class SyntaxTree {
         Character[] ops = {'(', ')', '*', '+', '.', '?', '|'};
         ArrayList<Character> opsList = new ArrayList();
         opsList.addAll(Arrays.asList(ops));
-        if (opsList.indexOf(first) >= opsList.indexOf(second) && !second.equals('(')) {
-            return true;
-        } else {
-            return false;
-        }
+        return opsList.indexOf(first) >= opsList.indexOf(second) && !second.equals('(');
     }
 
     private void getOperators() {
@@ -176,12 +176,16 @@ public class SyntaxTree {
         operators.addAll(Arrays.asList(ops));
     }
 
-    private void getSymbols(char[] regex) {
+    public void getSymbols(char[] regex) {
         for (Character c : regex) {
-            if ((!operators.contains(c)) && !symbols.contains(c) && (c != '(') && (c != ')')) {
+            if ((!operators.contains(c)) && !symbols.contains(c) && (c != '(') && (c != ')') && (c != '#')) {
                 symbols.add(c);
             }
         }
+    }
+
+    public ArrayList<Character> getInputSymbols() {
+        return this.symbols;
     }
 
     public ArrayList<Node> getLeafNodes() {
