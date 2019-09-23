@@ -24,9 +24,12 @@ public class SyntaxTree {
     }
 
     public Node constructTree(String regex) {
-        char[] regexCharArr = regex.toCharArray();
+        char[] regexCharSymbols = regex.toCharArray();
         getOperators();
-        getSymbols(regexCharArr);
+        getSymbols(regexCharSymbols);
+        regex = parseRegex(regex);
+        System.out.println(regex);
+        char[] regexCharArr = regex.toCharArray();
 
         int id = 0;
         for (char c : regexCharArr) {
@@ -125,6 +128,15 @@ public class SyntaxTree {
                             n.setFollowPos(mergeArrayWithoutDuplicates(n.getFollowPos(), node.getFirstPos()));
                         }
                         break;
+                    case "?":
+                        node.setIsNullable(true);
+                        node.addToFirstPos(leftChildNode.getFirstPos());
+                        node.addToLastPos(leftChildNode.getLastPos());
+
+                        for (Node n : node.getLastPos()) {
+                            n.setFollowPos(mergeArrayWithoutDuplicates(n.getFollowPos(), node.getFirstPos()));
+                        }
+                        break;
                 }
             }
         }
@@ -165,10 +177,25 @@ public class SyntaxTree {
     }
 
     private boolean checkPriority(char first, Character second) {
-        Character[] ops = {'(', ')', '*', '+', '.', '?', '|'};
+        Character[] ops = {'(', ')', '*', '+', '?', '.', '|'};
         ArrayList<Character> opsList = new ArrayList();
         opsList.addAll(Arrays.asList(ops));
         return opsList.indexOf(first) >= opsList.indexOf(second) && !second.equals('(');
+    }
+
+    private String parseRegex(String regex) {
+        Character[] options = {'*', '+', ')', '?'};
+        ArrayList<Character> opList = new ArrayList();
+        opList.addAll(Arrays.asList(options));
+
+        for (int i = 0; i < regex.length() - 1; i++) {
+            if ((opList.contains(regex.charAt(i)) || symbols.contains(regex.charAt(i)))
+                    && (symbols.contains(regex.charAt(i + 1)) || regex.charAt(i + 1) == '(')) {
+                regex = regex.substring(0, i + 1) + '.' + regex.substring(i + 1, regex.length());
+
+            }
+        }
+        return regex;
     }
 
     private void getOperators() {

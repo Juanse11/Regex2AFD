@@ -24,12 +24,15 @@ public class GUI extends javax.swing.JFrame {
     /**
      * Creates new form GUI
      */
+    private ArrayList<State> TranD;
+    private ArrayList<Character> symbols;
+    private AFD afd;
+
     public GUI() {
         initComponents();
+        setBackground(Color.WHITE);
         setLocationRelativeTo(null);
         setResizable(false);
-        setBackground(Color.WHITE);
-
     }
 
     class MyCanvas extends Canvas {
@@ -38,12 +41,22 @@ public class GUI extends javax.swing.JFrame {
 
         public MyCanvas(Node root) {
             this.root = root;
+            setLocationRelativeTo(null);
+            setResizable(false);
             setBackground(Color.WHITE);
             setSize(treePanel.getWidth(), treePanel.getHeight());
         }
 
         public void paint(Graphics g) {
+            g.setColor(Color.red);
+            g.fillRect(10, 10, 20, 20);
+            g.setColor(Color.BLACK);
+            g.drawString("PrimeraPos", 40, 25);
 
+            g.setColor(Color.BLUE);
+            g.fillRect(10, 40, 20, 20);
+            g.setColor(Color.BLACK);
+            g.drawString("UltimaPos", 40, 55);
             paintTree(g, root, 0, treePanel.getWidth() / 2 + 30, 0);
 
         }
@@ -52,31 +65,38 @@ public class GUI extends javax.swing.JFrame {
             if (root == null) {
                 return;
             }
-            paintTree(g, root.getLeftNode(), level + 1, x - 40, y + 40);
-            paintTree(g, root.getRightNode(), level + 1, x + 40, y + 40);
 
             g.setColor(Color.black);
             if (root.getSymbol().equals(".")) {
                 g.fillOval(x + 13, y + 10, 6, 6);
             } else {
-                Font f = new Font("Helvetica", Font.BOLD, 18);
+                Font f = new Font("Helvetica", Font.BOLD, 12);
                 g.setFont(f);
                 g.drawString(root.getSymbol(), x + 15, y + 15);
             }
-            Font f = new Font("Helvetica", Font.BOLD, 12);
+            Font f = new Font("Helvetica", Font.BOLD, 10);
             g.setFont(f);
-            g.drawString(nodeSymbolsToArray(root.getFirstPos()).toString(), x - (root.getFirstPos().size() * 10), y + 15);
-            g.drawString(nodeSymbolsToArray(root.getLastPos()).toString(), x + 25, y + 15);
+            g.setColor(Color.RED);
+            g.drawString(nodeSymbolsToArray(root.getFirstPos()).toString(), x - (root.getFirstPos().size() * 10) + 10, y + 15);
+            g.setColor(Color.BLUE);
+            g.drawString(nodeSymbolsToArray(root.getLastPos()).toString(), x + 20, y + 15);
+            g.setColor(Color.black);
             root.setX(x);
             root.setY(y);
             if (root.getLeftNode() != null) {
                 if (root.getRightNode() != null) {
-                    g.drawLine(x + 15, y + 15, root.getLeftNode().getX() + 15, root.getLeftNode().getY() + 15);
-                    g.drawLine(x + 15, y + 15, root.getRightNode().getX() + 15, root.getRightNode().getY() + 15);
+                    g.drawLine(x + 15, y + 15, x - 15, y + 40);
+                    g.drawLine(x + 15, y + 15, x + 75, y + 40);
+                    paintTree(g, root.getLeftNode(), level + 1, x - 40, y + 40);
+                    paintTree(g, root.getRightNode(), level + 1, x + 60, y + 40);
+
                 } else {
-                    g.drawLine(x + 15, y + 15, root.getLeftNode().getX() + 15, root.getLeftNode().getY() + 15);
+                    g.drawLine(x + 15, y + 15, x + 15, y + 40);
+                    paintTree(g, root.getLeftNode(), level + 1, x, y + 40);
+                    paintTree(g, root.getRightNode(), level + 1, x + 60, y + 40);
                 }
             }
+
         }
 
         private ArrayList nodeSymbolsToArray(ArrayList<Node> nodes) {
@@ -90,7 +110,7 @@ public class GUI extends javax.swing.JFrame {
     }
 
     private void drawTree(Node root) {
-
+        treePanel.removeAll();
         MyCanvas c = new MyCanvas(root);
         treePanel.add(c);
     }
@@ -101,14 +121,18 @@ public class GUI extends javax.swing.JFrame {
         st.traverseTree(root);
         drawTree(root);
         fillIndexTable(st.getLeafNodes());
-        AFD afd = new AFD();
-        ArrayList<Character> symbols = st.getInputSymbols();
+        afd = new AFD();
+        symbols = st.getInputSymbols();
         afd.constructAFD(root, symbols);
-        ArrayList<ArrayList<Transition>> TranD = afd.getTranD();
-        printTranD(TranD, symbols);
+        TranD = afd.getTranD();
+        printTranD(symbols);
     }
 
-    private void printTranD(ArrayList<ArrayList<Transition>> TranD, ArrayList<Character> symbols) {
+    private boolean isWordInLanguage(String word) {
+        return afd.recognizeString(word, TranD, symbols);
+    }
+
+    private void printTranD(ArrayList<Character> symbols) {
         DefaultTableModel dtm = new DefaultTableModel(0, 0);
         Character header[] = symbols.toArray(new Character[0]);
         dtm.setColumnIdentifiers(header);
@@ -116,10 +140,9 @@ public class GUI extends javax.swing.JFrame {
         dtm.setRowCount(TranD.size());
         for (int i = 0; i < TranD.size(); i++) {
             for (int j = 0; j < header.length; j++) {
-                if (TranD.get(i).get(j).getStateID() != -1) {
-                    dtm.setValueAt(TranD.get(i).get(j).getStateID(), i, j);
+                if (TranD.get(i).getTransitions().get(j) != null) {
+                    dtm.setValueAt(TranD.get(i).getTransitions().get(j).getStateID(), i, j);
                 }
-
             }
         }
 
@@ -165,11 +188,14 @@ public class GUI extends javax.swing.JFrame {
         treePanel = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         regexTextField = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         TranDTable = new javax.swing.JTable();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+        wordTextField = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        checkWordButton = new javax.swing.JButton();
 
         jScrollPane3.setViewportView(jTextPane1);
 
@@ -197,17 +223,10 @@ public class GUI extends javax.swing.JFrame {
         );
         treePanelLayout.setVerticalGroup(
             treePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 574, Short.MAX_VALUE)
         );
 
         jLabel1.setText("Expresión Regular");
-
-        jButton1.setText("Generar");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
 
         TranDTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -224,7 +243,23 @@ public class GUI extends javax.swing.JFrame {
 
         jLabel2.setText("Matriz de Transición");
 
-        jLabel3.setText("Posiiciones de Hojas");
+        jLabel3.setText("Tabla Arbol Sintactico");
+
+        jButton1.setText("Generar");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText("Cadena");
+
+        checkWordButton.setText("Reconocer");
+        checkWordButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkWordButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -232,44 +267,62 @@ public class GUI extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 289, Short.MAX_VALUE)
-                        .addGroup(layout.createSequentialGroup()
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel1)
+                                    .addComponent(jLabel4))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(regexTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(wordTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                             .addContainerGap()
-                            .addComponent(jLabel1)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(regexTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                            .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(103, 103, 103)
+                        .addGap(96, 96, 96)
                         .addComponent(jLabel2))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(89, 89, 89)
-                        .addComponent(jLabel3)))
-                .addGap(18, 18, 18)
+                        .addGap(93, 93, 93)
+                        .addComponent(jLabel3))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(checkWordButton)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(treePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(treePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(regexTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
-                .addGap(44, 44, 44)
+                    .addComponent(regexTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 32, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(wordTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(checkWordButton)
+                .addGap(31, 31, 31)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(58, 58, 58)
+                .addGap(79, 79, 79)
                 .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(150, Short.MAX_VALUE))
+                .addGap(30, 30, 30))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(treePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -280,6 +333,12 @@ public class GUI extends javax.swing.JFrame {
         String regex = regexTextField.getText();
         generateTree(regex);
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void checkWordButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkWordButtonActionPerformed
+        // TODO add your handling code here:
+        String word = wordTextField.getText();
+        System.out.println(isWordInLanguage(word));
+    }//GEN-LAST:event_checkWordButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -318,11 +377,13 @@ public class GUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTable TranDTable;
+    private javax.swing.JButton checkWordButton;
     private javax.swing.JTable indexTable;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -330,5 +391,6 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JTextPane jTextPane1;
     private javax.swing.JTextField regexTextField;
     private javax.swing.JPanel treePanel;
+    private javax.swing.JTextField wordTextField;
     // End of variables declaration//GEN-END:variables
 }
