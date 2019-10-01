@@ -34,7 +34,7 @@ public class AFD {
             State T = statesDQueue.poll();
             ArrayList<Transition> transitions = new ArrayList();
             for (Character a : symbols) {
-                stateID = T.getStateID();
+                
                 ArrayList<Node> U = new ArrayList();
                 boolean acceptingState = false;
                 for (Node p : T.getPositions()) {
@@ -76,7 +76,7 @@ public class AFD {
 
     private int findUInStatesD(ArrayList<Node> U) {
         for (State s : TranD) {
-            if (s.getPositions().containsAll(U)) {
+            if (s.getPositions().equals(U)) {
                 return TranD.indexOf(s);
             }
         }
@@ -89,22 +89,22 @@ public class AFD {
         for (int i = 0; i < word.length(); i++) {
             Character currentChar = word.charAt(i);
             stateTransitions = TranD.get(currentState.getStateID()).getTransitions();
-            if (!symbols.contains(currentChar) || isTransitionsNull(stateTransitions)) {
+            int index = indexOfTransition(stateTransitions, currentChar);
+            if (!symbols.contains(currentChar) || isTransitionsNull(stateTransitions) || index == -1) {
                 return false;
             }
-            currentState = TranD.get(stateTransitions.get(indexOfTransition(stateTransitions, currentChar)).getStateID());
+            currentState = TranD.get(stateTransitions.get(index).getStateID());
         }
         return currentState.isAcceptingState();
     }
 
     private boolean isTransitionsNull(ArrayList<Transition> transitions) {
-        int c = 0;
         for (Transition t : transitions) {
-            if (t == null) {
-                c++;
+            if (t != null) {
+                return false;
             }
         }
-        return transitions.size() == c;
+        return true;
     }
 
     private int indexOfTransition(ArrayList<Transition> transitions, Character c) {

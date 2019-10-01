@@ -132,11 +132,6 @@ public class SyntaxTree {
                         node.setIsNullable(true);
                         node.addToFirstPos(leftChildNode.getFirstPos());
                         node.addToLastPos(leftChildNode.getLastPos());
-
-                        for (Node n : node.getLastPos()) {
-                            n.setFollowPos(mergeArrayWithoutDuplicates(n.getFollowPos(), node.getFirstPos()));
-                        }
-                        break;
                 }
             }
         }
